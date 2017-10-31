@@ -53,6 +53,8 @@ my $pghost_default      = "/tmp";
 my $pgport_default      = 5432;
 my $start_opts_default  = "";
 my $maxlag_default    = "0";
+my $pgxl_dn_or_coord_default = "coord";
+my $pgxl_node_index_default = 0;
 
 # Set default values if not found in environment
 my $system_user  = $ENV{'OCF_RESKEY_system_user'} || $system_user_default;
@@ -65,6 +67,8 @@ my $start_opts   = $ENV{'OCF_RESKEY_start_opts'} || $start_opts_default;
 my $maxlag       = $ENV{'OCF_RESKEY_maxlag'} || $maxlag_default;
 my $recovery_tpl = $ENV{'OCF_RESKEY_recovery_template'}
     || "$pgdata/recovery.conf.pcmk";
+my $pgxl_dn_or_coord = $ENV{'OCF_RESKEY_pgxl_dn_or_coord'} || $pgxl_dn_or_coord_default;
+my $pgxl_node_index = $ENV{'OCF_RESKEY_pgxl_node_index'} || $pgxl_node_index_default;
 
 
 # PostgreSQL commands path
@@ -1027,6 +1031,18 @@ the master and the write location on the standby.
 
 (optional, integer, default "0" disables this feature)
 
+=item B<pgxl_dn_or_coord>
+
+Whether the resource is running as a PGXL data-node or coordinator.
+
+(required, string, default "dn" indicates data-node)
+
+=item B<pgxl_node_index>
+
+PGXL role index of the resource.
+
+(required, integer, default 0)
+
 =item B<datadir>
 
 Path to the directory set in C<data_directory> from your postgresql.conf file.
@@ -1143,6 +1159,22 @@ sub ocf_meta_data {
               </longdesc>
               <shortdesc lang="en">Additionnal arguments given to the postgres process on startup.</shortdesc>
               <content type="string" default="$start_opts_default" />
+            </parameter>
+
+            <parameter name="pgxl_dn_or_coord" unique="0" required="1">
+              <longdesc lang="en">
+                PGXL role for this PG resource. Can be either "dn" or "coord".
+              </longdesc>
+              <shortdesc lang="en">PGXL role.</shortdesc>
+              <content type="string" default="$pgxl_dn_or_coord_default" />
+            </parameter>
+
+            <parameter name="pgxl_node_index" unique="0" required="1">
+              <longdesc lang="en">
+                PGXL index for this node.
+              </longdesc>
+              <shortdesc lang="en">PGXL node index</shortdesc>
+              <content type="integer" default="$pgxl_node_index_default" />
             </parameter>
 
           </parameters>
@@ -1925,6 +1957,21 @@ sub pgsql_promote {
     }
 
     ocf_log( 'info', 'Promote complete' );
+
+    $output = `su $system_user -c "$PGPSQL -h $pghost -p $pgport -Atc \"SELECT node_name, node_host, node_port FROM pgxc_node\""`
+
+    foreach my $node ( split(/\n/, $output) ) {
+        @info = split(/|/, $node);
+        # TODO: replace with single execute direct query?
+        # TODO: alternatively, continue executing queries per node and handle unreachable nodes...
+        if ( $info[0] eq $pgxl_dn_or_coord.$pgxl_node_index ) {
+            ocf_log('info', "ALTER NODE %s", $OCF_RESKEY_nodename);
+            _runas( $PGPSQL, '-h', $pghost, '-p', $pgport, '-c', "ALTER NODE $pgxl_dn_or_coord.$pgxl_node_index WITH (HOST='$pghost', PORT=$pgport); SELECT pgxc_pool_reload()" );
+        } else {
+            ocf_log('info', "EXECUTE DIRECT ON (%s)", $nodename);
+            _runas( $PGPSQL, '-h', $info[1], '-p', $info[2], '-c', "ALTER NODE $pgxl_dn_or_coord.$pgxl_node_index WITH (HOST='$pghost', PORT=$pgport); SELECT pgxc_pool_reload()" );
+        }
+    }
 
     return $OCF_SUCCESS;
 }
