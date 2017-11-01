@@ -868,9 +868,9 @@ sub _confirm_role {
 
     my $ans = qx{ $PGCTRLDATA "$datadir" 2>/dev/null };
     $rc = -1;
-    foreach my $line in split /\n/, $ans {
+    foreach my $line (split /\n/, $ans) {
         if ($ans =~ /Database cluster state:\s+(.*)$/) {
-                $is_in_recovery = 't' if $1 eq "in archive recovery" else 'f';
+                $is_in_recovery = ($1 eq "in archive recovery") ? 't' : 'f';
                 $rc = 0;
                 last;
         }
@@ -1970,17 +1970,17 @@ sub pgsql_promote {
 
     ocf_log( 'info', 'Promote complete' );
 
-    $output = `su $system_user -c "$PGPSQL -h $pghost -p $pgport -Atc \"SELECT node_name, node_host, node_port FROM pgxc_node\""`
+    my $output = `su $system_user -c "$PGPSQL -h $pghost -p $pgport -Atc \"SELECT node_name, node_host, node_port FROM pgxc_node\""`;
 
     foreach my $node ( split(/\n/, $output) ) {
-        @info = split(/|/, $node);
+        my @info = split(/|/, $node);
         # TODO: replace with single execute direct query?
         # TODO: alternatively, continue executing queries per node and handle unreachable nodes...
         if ( $info[0] eq $pgxl_dn_or_coord.$pgxl_node_index ) {
-            ocf_log('info', "ALTER NODE %s", $OCF_RESKEY_nodename);
+            ocf_log('info', "ALTER NODE %s", $pghost);
             _runas( $PGPSQL, '-h', $pghost, '-p', $pgport, '-c', "ALTER NODE $pgxl_dn_or_coord.$pgxl_node_index WITH (HOST='$pghost', PORT=$pgport); SELECT pgxc_pool_reload()" );
         } else {
-            ocf_log('info', "EXECUTE DIRECT ON (%s)", $nodename);
+            ocf_log('info', "EXECUTE DIRECT ON (%s)", $info[1]);
             _runas( $PGPSQL, '-h', $info[1], '-p', $info[2], '-c', "ALTER NODE $pgxl_dn_or_coord.$pgxl_node_index WITH (HOST='$pghost', PORT=$pgport); SELECT pgxc_pool_reload()" );
         }
     }
