@@ -174,6 +174,7 @@ sub _query {
     return $rc;
 }
 
+# TODO: we cant do this (no hot standby)
 # Get the last received location on a standby
 # if the first argument is true, returns the value as decimal
 # if the first argument is false, returns the value as LSN
@@ -782,6 +783,7 @@ sub _check_locations {
     return $OCF_SUCCESS;
 }
 
+# TODO: we can't do this (no hot standby)
 # _check_switchover
 # check if the pgsql switchover to the localnode is safe.
 # This is supposed to be called **after** the master has been stopped or demote.
@@ -864,9 +866,19 @@ sub _confirm_role {
     my $rc;
     my @rs;
 
-    $rc = _query( "SELECT pg_is_in_recovery()", \@rs );
+    my $ans = qx{ $PGCTRLDATA "$datadir" 2>/dev/null };
+    $rc = -1;
+    foreach my $line in split /\n/, $ans {
+        if ($ans =~ /Database cluster state:\s+(.*)$/) {
+                $is_in_recovery = 't' if $1 eq "in archive recovery" else 'f';
+                $rc = 0;
+                last;
+        }
+    }
 
-    $is_in_recovery = $rs[0][0];
+    # $rc = _query( "SELECT pg_is_in_recovery()", \@rs );
+    #
+    # $is_in_recovery = $rs[0][0];
 
     if ( $rc == 0 ) {
         # The query was executed, check the result.
@@ -2015,7 +2027,8 @@ sub pgsql_notify_pre_promote {
     ) {
         $rc = _check_switchover();
 
-        unless ( $rc == 0 ) {
+        # TODO:
+        unless ( ($rc == 0) || 1) {
             # Shortcut the election process as the switchover will be
             # canceled
             _set_priv_attr( 'cancel_switchover', $rc );
