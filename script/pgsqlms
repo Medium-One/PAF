@@ -1575,7 +1575,7 @@ sub pgsql_monitor {
     # First check, verify if the instance is listening.
     $pgisready_rc = _pg_isready();
 
-    if ( $pgisready_rc == 0 ) {
+    if ( ($pgisready_rc == 0) || ($pgisready_rc == 1) ) {
         # The instance is listening.
         # We confirm that the instance is up and return if it is a primary or a
         # secondary
@@ -1608,7 +1608,7 @@ sub pgsql_monitor {
                 $OCF_RESOURCE_INSTANCE );
 
             $pgisready_rc = _pg_isready();
-            if ( $pgisready_rc == 0 ) {
+            if ( ($pgisready_rc == 0 || ($pgisready_rc == 1) ) {
                 # Consistent with pg_controdata output.
                 # We can check if the instance is primary or secondary
                 ocf_log( 'debug', 'pgsql_monitor: instance "%s" is listening',
