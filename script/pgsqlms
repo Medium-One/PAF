@@ -511,9 +511,11 @@ sub _pg_ctl_status {
 # Start the local instance using pg_ctl
 #
 sub _pg_ctl_start {
-    # Add 60s to the timeout or use a 24h timeout fallback to make sure
-    # Pacemaker will give up before us and take decisions
-    my $timeout = ( _get_action_timeout() || 60*60*24 ) + 60;
+    # hope that DB startup only takes 10 seconds
+    # we have to wait a little bit, but we can't wait forever because nodes
+    # must start in standby mode and warm standby can never be connected to so
+    # pg_ctl start mode always times out
+    my $timeout = 10;
 
     my @cmd = ( $PGCTL, '--pgdata', $pgdata, '-w', '--timeout', $timeout, '-Z', ($pgxl_dn_or_coord eq "coord") ?  "coordinator" : "datanode", 'start' );
 
@@ -1617,7 +1619,6 @@ sub pgsql_monitor {
             }
 
             # Still not consistent, raise an error.
-            # NOTE: if the instance is a warm standby, we end here.
             # TODO raise an hard error here ?
             ocf_exit_reason(
                 'Instance "%s" controldata is not consistent with pg_isready (returned: %d)',
