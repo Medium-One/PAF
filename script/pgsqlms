@@ -500,7 +500,7 @@ sub _pg_isready {
 # though, as this is considered a hard error from monitor.
 #
 sub _pg_ctl_status {
-    my $rc = _runas( $PGCTL, '--pgdata', $pgdata, 'status' );
+    my $rc = _runas( $PGCTL, '--pgdata', $pgdata, '-Z', ($pgxl_dn_or_coord eq "coord") ?  "coordinator" : "datanode", 'status' );
 
     # Possible error codes:
     #   3: postmaster.pid file does not exist OR it does but the process
@@ -515,7 +515,7 @@ sub _pg_ctl_start {
     # Pacemaker will give up before us and take decisions
     my $timeout = ( _get_action_timeout() || 60*60*24 ) + 60;
 
-    my @cmd = ( $PGCTL, '--pgdata', $pgdata, '-w', '--timeout', $timeout, 'start' );
+    my @cmd = ( $PGCTL, '--pgdata', $pgdata, '-w', '--timeout', $timeout, '-Z', ($pgxl_dn_or_coord eq "coord") ?  "coordinator" : "datanode", 'start' );
 
     push @cmd => ( '-o', $start_opts ) if $start_opts ne '';
 
@@ -1549,7 +1549,7 @@ sub pgsql_stop {
 
 
     $rc = _runas( $PGCTL, '--pgdata', $pgdata, '-w', '--timeout', $timeout,
-        '-m', 'fast', 'stop' );
+        '-m', 'fast', '-Z', ($pgxl_dn_or_coord eq "coord") ?  "coordinator" : "datanode", 'stop' );
 
     if ( $rc == 0 ) {
         # Wait for the stop to finish.
@@ -1744,7 +1744,7 @@ sub pgsql_demote {
         # after some timeout and return success, which is misleading.
 
         $rc = _runas( $PGCTL, '--pgdata', $pgdata, '--mode', 'fast', '-w',
-            '--timeout', $timeout , 'stop' );
+            '--timeout', $timeout , '-Z', ($pgxl_dn_or_coord eq "coord") ?  "coordinator" : "datanode", 'stop' );
 
         # No need to wait for stop to complete, this is handled in pg_ctl
         # using -w option.
@@ -1955,7 +1955,7 @@ sub pgsql_promote {
 
     unless (
         # Promote the instance on the current node.
-        _runas( $PGCTL, '--pgdata', $pgdata, '-w', 'promote' ) == 0 )
+        _runas( $PGCTL, '--pgdata', $pgdata, '-w', '-Z', ($pgxl_dn_or_coord eq "coord") ?  "coordinator" : "datanode", 'promote' ) == 0 )
     {
         ocf_exit_reason( 'Error during promotion command' );
         return $OCF_ERR_GENERIC;
