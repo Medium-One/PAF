@@ -869,7 +869,7 @@ sub _confirm_role {
     my $ans = qx{ $PGCTRLDATA "$datadir" 2>/dev/null };
     $rc = -1;
     foreach my $line (split /\n/, $ans) {
-        if ($ans =~ /Database cluster state:\s+(.*)$/) {
+        if ($line =~ /Database cluster state:\s+(.*)$/) {
                 $is_in_recovery = ($1 eq "in archive recovery") ? 't' : 'f';
                 $rc = 0;
                 last;
