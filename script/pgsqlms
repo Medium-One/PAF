@@ -2208,6 +2208,8 @@ sub pgsql_notify {
 
     $type_op = "$OCF_NOTIFY_ENV{'type'}-$OCF_NOTIFY_ENV{'operation'}";
 
+    ocf_log( 'info', 'Notify triggered: %s', $type_op );
+
     for ( $type_op ) {
         if    ( /^pre-promote$/  ) { return pgsql_notify_pre_promote()  }
         elsif ( /^post-promote$/ ) { return pgsql_notify_post_promote() }
