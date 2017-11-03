@@ -1885,51 +1885,53 @@ sub pgsql_promote {
         if ( $ans eq '' ) {
             # This should not happen as the "lsn_location" attribute should have
             # been updated during the "pre-promote" action.
-            ocf_exit_reason( 'Can not get current node LSN location' );
-            return $OCF_ERR_GENERIC;
-        }
+            ocf_log( 'warning', 'Can not get current node LSN location' );
+            #ocf_exit_reason( 'Can not get current node LSN location' );
+            #return $OCF_ERR_GENERIC;
+        } else {
 
-        chomp $ans;
-        ( $max_tl, $max_lsn ) = split /#/, $ans;
-
-        ocf_log( 'debug', 'pgsql_promote: current node TL#LSN location: %s#%s',
-            $max_tl, $max_lsn );
-
-        # Now we compare with the other available nodes.
-        foreach my $node ( @active_nodes ) {
-            # We exclude the current node from the check.
-            next if $node eq $nodename;
-
-            # Get the "lsn_location" attribute value for the node, as set during
-            # the "pre-promote" action.
-            $ans = _get_priv_attr( 'lsn_location', $node );
-
-            if ( $ans eq '' ) {
-                # This should not happen as the "lsn_location" attribute should
-                # have been updated during the "pre-promote" action.
-                ocf_exit_reason( 'Can not get LSN location for "%s"', $node );
-                return $OCF_ERR_GENERIC;
-            }
-
-            # convert location to decimal
             chomp $ans;
-            ( $node_tl, $node_lsn ) = split /#/, $ans;
+            ( $max_tl, $max_lsn ) = split /#/, $ans;
 
-            ocf_log( 'debug',
-                'pgsql_promote: comparing with "%s": TL#LSN is %s#%s',
-                $node, $node_tl, $node_lsn );
+            ocf_log( 'debug', 'pgsql_promote: current node TL#LSN location: %s#%s',
+                $max_tl, $max_lsn );
 
-            # If the node has a higher LSN, select it as a best candidate to
-            # promotion and keep looping to check the TL/LSN of other nodes.
-            if ( $node_tl > $max_tl
-                or ( $node_tl == $max_tl and $node_lsn > $max_lsn )
-            ) {
+            # Now we compare with the other available nodes.
+            foreach my $node ( @active_nodes ) {
+                # We exclude the current node from the check.
+                next if $node eq $nodename;
+
+                # Get the "lsn_location" attribute value for the node, as set during
+                # the "pre-promote" action.
+                $ans = _get_priv_attr( 'lsn_location', $node );
+
+                if ( $ans eq '' ) {
+                    # This should not happen as the "lsn_location" attribute should
+                    # have been updated during the "pre-promote" action.
+                    ocf_exit_reason( 'Can not get LSN location for "%s"', $node );
+                    return $OCF_ERR_GENERIC;
+                }
+
+                # convert location to decimal
+                chomp $ans;
+                ( $node_tl, $node_lsn ) = split /#/, $ans;
+
                 ocf_log( 'debug',
-                    'pgsql_promote: "%s" is a better candidate to promote (%s#%s > %s#%s)',
-                    $node, $node_tl, $node_lsn, $max_tl, $max_lsn );
-                $node_to_promote = $node;
-                $max_tl          = $node_tl;
-                $max_lsn         = $node_lsn;
+                    'pgsql_promote: comparing with "%s": TL#LSN is %s#%s',
+                    $node, $node_tl, $node_lsn );
+
+                # If the node has a higher LSN, select it as a best candidate to
+                # promotion and keep looping to check the TL/LSN of other nodes.
+                if ( $node_tl > $max_tl
+                    or ( $node_tl == $max_tl and $node_lsn > $max_lsn )
+                ) {
+                    ocf_log( 'debug',
+                        'pgsql_promote: "%s" is a better candidate to promote (%s#%s > %s#%s)',
+                        $node, $node_tl, $node_lsn, $max_tl, $max_lsn );
+                    $node_to_promote = $node;
+                    $max_tl          = $node_tl;
+                    $max_lsn         = $node_lsn;
+                }
             }
         }
 
