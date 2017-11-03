@@ -1977,7 +1977,8 @@ sub pgsql_promote {
     my $output;
 
     do {
-        $output =  = `$pgxl_node_list_cmd`;
+        ocf_log( 'info', 'Checking PGXL cluster nodes: %s', $pgxl_node_list_cmd );        
+        $output = `$pgxl_node_list_cmd`;
     } while ($?);
     ocf_log( 'info', 'PGXL cluster nodes: %s', $output );
 
