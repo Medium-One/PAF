@@ -511,11 +511,11 @@ sub _pg_ctl_status {
 # Start the local instance using pg_ctl
 #
 sub _pg_ctl_start {
-    # hope that DB startup only takes 10 seconds
+    # hope that DB startup only takes 20 seconds
     # we have to wait a little bit, but we can't wait forever because nodes
     # must start in standby mode and warm standby can never be connected to so
     # pg_ctl start mode always times out
-    my $timeout = 10;
+    my $timeout = 20;
 
     my @cmd = ( $PGCTL, '--pgdata', $pgdata, '-w', '--timeout', $timeout, '-Z', ($pgxl_dn_or_coord eq "coord") ?  "coordinator" : "datanode", 'start' );
 
