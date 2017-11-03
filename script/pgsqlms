@@ -515,7 +515,7 @@ sub _pg_ctl_start {
     # we have to wait a little bit, but we can't wait forever because nodes
     # must start in standby mode and warm standby can never be connected to so
     # pg_ctl start mode always times out
-    my $timeout = 20;
+    my $timeout = 10;
 
     my @cmd = ( $PGCTL, '--pgdata', $pgdata, '-w', '--timeout', $timeout, '-Z', ($pgxl_dn_or_coord eq "coord") ?  "coordinator" : "datanode", 'start' );
 
@@ -1974,8 +1974,11 @@ sub pgsql_promote {
     ocf_log( 'info', 'Promote complete' );
 
     my $pgxl_node_list_cmd = 'su $system_user -c "$PGPSQL -h $pghost -p $pgport -Atc \"SELECT node_name, node_host, node_port FROM pgxc_node\""';
-    my $output = `$pgxl_node_list_cmd`;
+    my $output;
 
+    do {
+        $output =  = `$pgxl_node_list_cmd`;
+    } while ($?);
     ocf_log( 'info', 'PGXL cluster nodes: %s', $output );
 
     foreach my $node ( split(/\n/, $output) ) {
