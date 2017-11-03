@@ -1975,6 +1975,8 @@ sub pgsql_promote {
 
     my $output = `su $system_user -c "$PGPSQL -h $pghost -p $pgport -Atc \"SELECT node_name, node_host, node_port FROM pgxc_node\""`;
 
+    ocf_log( 'info', 'PGXL cluster nodes: %s', $output );
+
     foreach my $node ( split(/\n/, $output) ) {
         my @info = split(/|/, $node);
         # TODO: replace with single execute direct query?
