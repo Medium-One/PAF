@@ -1973,11 +1973,11 @@ sub pgsql_promote {
 
     ocf_log( 'info', 'Promote complete' );
 
-    my $pgxl_node_list_cmd = 'su $system_user -c "$PGPSQL -h $pghost -p $pgport -Atc \"SELECT node_name, node_host, node_port FROM pgxc_node\""';
+    my $pgxl_node_list_cmd = "su $system_user -c \"$PGPSQL -h $pghost -p $pgport -Atc \\\"SELECT node_name, node_host, node_port FROM pgxc_node\\\"\"";
     my $output;
 
     do {
-        ocf_log( 'info', 'Checking PGXL cluster nodes: %s', $pgxl_node_list_cmd );        
+        ocf_log( 'info', 'Checking PGXL cluster nodes: %s', $pgxl_node_list_cmd );
         $output = `$pgxl_node_list_cmd`;
     } while ($?);
     ocf_log( 'info', 'PGXL cluster nodes: %s', $output );
