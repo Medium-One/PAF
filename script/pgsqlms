@@ -1973,7 +1973,8 @@ sub pgsql_promote {
 
     ocf_log( 'info', 'Promote complete' );
 
-    my $output = `su $system_user -c "$PGPSQL -h $pghost -p $pgport -Atc \"SELECT node_name, node_host, node_port FROM pgxc_node\""`;
+    my $pgxl_node_list_cmd = 'su $system_user -c "$PGPSQL -h $pghost -p $pgport -Atc \"SELECT node_name, node_host, node_port FROM pgxc_node\""';
+    my $output = `$pgxl_node_list_cmd`;
 
     ocf_log( 'info', 'PGXL cluster nodes: %s', $output );
 
