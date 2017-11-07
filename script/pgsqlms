@@ -1983,7 +1983,7 @@ sub pgsql_promote {
     ocf_log( 'info', 'PGXL cluster nodes: %s', $output );
 
     foreach my $node ( split(/\n/, $output) ) {
-        my @info = split(/|/, $node);
+        my @info = split(/\|/, $node);
         # TODO: replace with single execute direct query?
         # TODO: alternatively, continue executing queries per node and handle unreachable nodes...
         if ( $info[0] eq $pgxl_dn_or_coord.$pgxl_node_index ) {
