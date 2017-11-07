@@ -1295,6 +1295,7 @@ sub pgsql_validate_all {
     my $PGVERSION;
     my @content;
     my %cdata;
+    my $isprobe = ocf_is_probe();
 
     unless (
         ocf_version_cmp( $ENV{"OCF_RESKEY_crm_feature_set"}, '3.0.9' ) == 2
@@ -1330,24 +1331,28 @@ sub pgsql_validate_all {
 
     # check pgdata
     if ( ! -d $pgdata ) {
+        exit $OCF_NOT_RUNNING if $isprobe;
         ocf_exit_reason( 'PGDATA "%s" does not exists', $pgdata );
         exit $OCF_ERR_ARGS;
     }
 
     # check datadir
     if ( ! -d $datadir ) {
+        exit $OCF_NOT_RUNNING if $isprobe;
         ocf_exit_reason( 'data_directory "%s" does not exists', $datadir );
         exit $OCF_ERR_ARGS;
     }
 
     # check PG_VERSION
     if ( ! -s "$datadir/PG_VERSION" ) {
+        exit $OCF_NOT_RUNNING if $isprobe;
         ocf_exit_reason( 'PG_VERSION does not exists in "%s"', $datadir );
         exit $OCF_ERR_ARGS;
     }
 
     # check recovery template
     if ( ! -f $recovery_tpl ) {
+        exit $OCF_NOT_RUNNING if $isprobe;
         ocf_exit_reason( 'Recovery template file "%s" does not exist',
             $recovery_tpl );
         exit $OCF_ERR_ARGS;
@@ -1355,6 +1360,7 @@ sub pgsql_validate_all {
 
     # check content of the recovery template file
     unless ( open( $fh, '<', $recovery_tpl ) ) {
+        exit $OCF_NOT_RUNNING if $isprobe;
         ocf_exit_reason( 'Could not open file "%s": %s', $recovery_tpl, $! );
         exit $OCF_ERR_ARGS;
     }
@@ -1397,6 +1403,7 @@ sub pgsql_validate_all {
 
     # require 9.3 minimum
     unless ( open( $fh, '<', "$datadir/PG_VERSION" ) ) {
+        exit $OCF_NOT_RUNNING if $isprobe;
         ocf_exit_reason( "Could not open file \"$datadir/PG_VERSION\": $!" );
         exit $OCF_ERR_ARGS;
     }
@@ -1424,6 +1431,7 @@ sub pgsql_validate_all {
     unless ( -x $PGCTL and -x $PGPSQL and -x $PGCTRLDATA and -x $PGISREADY
          and -x $PGWALDUMP
      ) {
+         exit $OCF_NOT_RUNNING if $isprobe;
         ocf_exit_reason(
             "Missing one or more binary. Check following path: %s, %s, %s, %s, %s",
             $PGCTL, $PGPSQL, $PGCTRLDATA, $PGISREADY, $PGWALDUMP );
