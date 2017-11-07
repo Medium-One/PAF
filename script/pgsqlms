@@ -2250,10 +2250,9 @@ chdir File::Spec->tmpdir();
 # Set current node name.
 $nodename = ocf_local_nodename();
 
-if ( $OCF_ACTION =~ /^(?:start|stop|reload|promote|demote|notify)$/ ) {
+if ( $OCF_ACTION =~ /^(?:start|stop|reload|monitor|promote|demote|notify)$/ ) {
     pgsql_validate_all();
     # No need to validate for meta-data, methods or validate-all.
-    # also don't validate on monitor, which can run on nodes without required dirs
 }
 
 # Run action
