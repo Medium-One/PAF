@@ -2001,7 +2001,7 @@ sub pgsql_promote {
             ocf_log('info', "ALTER NODE %s", $info[1]);
             _runas( $PGPSQL, '-h', $info[1], '-p', $pgport, '-c', "ALTER NODE $pgxl_dn_or_coord$pgxl_node_index WITH (HOST='$info[1]', PORT=$pgport); SELECT pgxc_pool_reload()" );
         } else {
-            ocf_log('info', "EXECUTE DIRECT ON (%s)", $info[1]);
+            ocf_log('info', "EXECUTE DIRECT ON (%s:%d)", $info[1], $info[2]);
             _runas( $PGPSQL, '-h', $info[1], '-p', $info[2], '-c', "ALTER NODE $pgxl_dn_or_coord$pgxl_node_index WITH (HOST='$nodename', PORT=$pgport); SELECT pgxc_pool_reload()" );
         }
     }
