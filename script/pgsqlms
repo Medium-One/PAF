@@ -1981,7 +1981,7 @@ sub pgsql_promote {
 
     ocf_log( 'info', 'Promote complete' );
 
-    my $pgxl_node_list_cmd = "su $system_user -c \"$PGPSQL -h $pghost -p $pgport -Atc \\\"SELECT node_name, node_host, node_port FROM pgxc_node\\\"\"";
+    my $pgxl_node_list_cmd = "su $system_user -c \"$PGPSQL -h $nodename -p $pgport -Atc \\\"SELECT node_name, node_host, node_port FROM pgxc_node\\\"\"";
     my $output;
 
     do {
@@ -1994,12 +1994,15 @@ sub pgsql_promote {
         my @info = split(/\|/, $node);
         # TODO: replace with single execute direct query?
         # TODO: alternatively, continue executing queries per node and handle unreachable nodes...
+        # TODO: verify entry for our host matches $nodename?
+        # TODO: verify entry for our host matches $pgport?
+        # TODO: set $pghost to $nodename?
         if ( $info[0] eq $pgxl_dn_or_coord.$pgxl_node_index ) {
-            ocf_log('info', "ALTER NODE %s", $pghost);
-            _runas( $PGPSQL, '-h', $pghost, '-p', $pgport, '-c', "ALTER NODE $pgxl_dn_or_coord.$pgxl_node_index WITH (HOST='$pghost', PORT=$pgport); SELECT pgxc_pool_reload()" );
+            ocf_log('info', "ALTER NODE %s", $info[1]);
+            _runas( $PGPSQL, '-h', $info[1], '-p', $pgport, '-c', "ALTER NODE $pgxl_dn_or_coord$pgxl_node_index WITH (HOST='$info[1]', PORT=$pgport); SELECT pgxc_pool_reload()" );
         } else {
             ocf_log('info', "EXECUTE DIRECT ON (%s)", $info[1]);
-            _runas( $PGPSQL, '-h', $info[1], '-p', $info[2], '-c', "ALTER NODE $pgxl_dn_or_coord.$pgxl_node_index WITH (HOST='$pghost', PORT=$pgport); SELECT pgxc_pool_reload()" );
+            _runas( $PGPSQL, '-h', $info[1], '-p', $info[2], '-c', "ALTER NODE $pgxl_dn_or_coord$pgxl_node_index WITH (HOST='$nodename', PORT=$pgport); SELECT pgxc_pool_reload()" );
         }
     }
 
