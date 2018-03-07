@@ -97,6 +97,8 @@ my $PGVER_10  = 100000;
 # the result as second one.
 #
 sub _query {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
     my $query        = shift;
     my $res          = shift;
     my $connstr      = "dbname=postgres";
@@ -180,6 +182,8 @@ sub _query {
 # if the first argument is false, returns the value as LSN
 # Returns undef if query failed
 sub _get_last_received_lsn {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
     my ( $dec ) = @_;
     my $pg_last_wal_receive_lsn = 'pg_last_wal_receive_lsn()';
     my $pg_wal_lsn_diff         = 'pg_wal_lsn_diff';
@@ -214,6 +218,8 @@ sub _get_last_received_lsn {
 # Returns directly the result set of the query or exit with an error.
 # Exits with OCF_ERR_GENERIC if the query failed
 sub _get_lag_scores {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
     my $pg_current_wal_lsn = 'pg_current_wal_lsn()';
     my $pg_wal_lsn_diff    = 'pg_wal_lsn_diff';
     my $write_lsn          = 'write_lsn';
@@ -273,6 +279,8 @@ sub _get_lag_scores {
 # Returns   timeout as integer
 #           undef if unknown
 sub _get_action_timeout {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
     my $timeout = $ENV{'OCF_RESKEY_CRM_meta_timeout'} / 1000;
 
     ocf_log( 'debug', '_get_action_timeout: known timeout: %s',
@@ -286,6 +294,8 @@ sub _get_action_timeout {
 # Get, parse and return the value of the given private attribute name
 # Returns an empty string if not found.
 sub _get_priv_attr {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
     my ( $name, $node ) = @_;
     my $val             = '';
     my $node_arg        = '';
@@ -313,6 +323,8 @@ sub _get_priv_attr {
 # As setting an attribute is asynchronous, this will return as soon as the
 # attribute is really set by attrd and available.
 sub _set_priv_attr {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
     my ( $name, $val ) = @_;
     my $name_instance  = "$name-$OCF_RESOURCE_INSTANCE";
 
@@ -334,6 +346,8 @@ sub _set_priv_attr {
 # As setting an attribute is asynchronous, this will return as soon as the
 # attribute is really deleted by attrd.
 sub _delete_priv_attr {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
     my ( $name ) = @_;
     my $name_instance  = "$name-$OCF_RESOURCE_INSTANCE";
 
@@ -356,6 +370,8 @@ sub _delete_priv_attr {
 # Returns an empty string if not found.
 # Returns undef on crm_master call on error
 sub _get_master_score {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
     my ( $node ) = @_;
     my $node_arg = '';
     my $score;
@@ -377,6 +393,8 @@ sub _get_master_score {
 # As setting an attribute is asynchronous, this will return as soon as the
 # attribute is really set by attrd and available everywhere.
 sub _set_master_score {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
     my ( $score, $node ) = @_;
     my $node_arg = '';
     my $tmp;
@@ -401,6 +419,8 @@ sub _set_master_score {
 # Returns 1 if at least one master score >= 0 is found.
 # Returns 0 otherwise
 sub _master_score_exists {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
     my @partition_nodes = split /\s+/ => qx{ $CRM_NODE --partition };
 
     foreach my $node ( @partition_nodes ) {
@@ -414,6 +434,8 @@ sub _master_score_exists {
 
 # Check if the current transiation is a recover of a master clone on given node.
 sub _is_master_recover {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
     my ( $n ) = @_;
 
     return (
@@ -424,6 +446,8 @@ sub _is_master_recover {
 
 # Check if the current transition is a recover of a slave clone on given node.
 sub _is_slave_recover {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
     my ( $n ) = @_;
 
     return (
@@ -434,6 +458,8 @@ sub _is_slave_recover {
 
 # check if th current transition is a switchover to the given node.
 sub _is_switchover {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
     my ( $n ) = @_;
     my $old = $OCF_NOTIFY_ENV{'master'}[0]{'uname'};
 
@@ -453,6 +479,8 @@ sub _is_switchover {
 # It basically forks and seteuid/setuid away from root.
 #
 sub _runas {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
     my $rc;
     my $pid;
     my @cmd = @_;
@@ -484,6 +512,8 @@ sub _runas {
 # Check if instance is listening on the given host/port.
 #
 sub _pg_isready {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
     my $rc = _runas( $PGISREADY, '-h', $pghost, '-p', $pgport );
 
     # Possible error codes:
@@ -500,6 +530,8 @@ sub _pg_isready {
 # though, as this is considered a hard error from monitor.
 #
 sub _pg_ctl_status {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
     my $rc = _runas( $PGCTL, '--pgdata', $pgdata, '-Z', ($pgxl_dn_or_coord eq "coord") ?  "coordinator" : "datanode", 'status' );
 
     # Possible error codes:
@@ -511,6 +543,8 @@ sub _pg_ctl_status {
 # Start the local instance using pg_ctl
 #
 sub _pg_ctl_start {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
     # hope that DB startup only takes 20 seconds
     # we have to wait a little bit, but we can't wait forever because nodes
     # must start in standby mode and warm standby can never be connected to so
@@ -531,6 +565,8 @@ sub _pg_ctl_start {
 #   recovery_target_timeline = 'latest'
 #
 sub _create_recovery_conf {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
     my $fh;
     my (undef, undef, $uid, $gid) = getpwnam($system_user);
     my $recovery_conf    = '';
@@ -586,6 +622,8 @@ sub _create_recovery_conf {
 # WARNING: the status is NOT updated in case of crash.
 #
 sub _get_controldata {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
     my %controldata;
     my $ans;
 
@@ -640,6 +678,8 @@ sub _get_controldata {
 # that could indicate the instance has crashed.
 #
 sub _controldata_to_ocf {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
     my %cdata = _get_controldata();
 
     while ( 1 ) {
@@ -695,6 +735,8 @@ sub _controldata_to_ocf {
 # This sub is supposed to be executed from a master monitor action.
 #
 sub _check_locations {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
     my $node_score;
     my $row_num;
     my $row;
@@ -797,6 +839,8 @@ sub _check_locations {
 # Returns 1 if swithcover is not safe
 # Returns 2 for internal error
 sub _check_switchover {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
     my $has_sht_chk = 0;
     my $last_redo;
     my $last_lsn;
@@ -864,6 +908,8 @@ sub _check_switchover {
 # check if the instance is primary or secondary.
 #
 sub _confirm_role {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
     my $is_in_recovery;
     my $rc;
     my @rs;
@@ -927,6 +973,8 @@ sub _confirm_role {
 # and if it was propertly shut down.
 #
 sub _confirm_stopped {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
     my $pgctlstatus_rc;
     my $controldata_rc;
 
@@ -1290,6 +1338,8 @@ sub ocf_methods {
 #### RA FUNCS
 
 sub pgsql_validate_all {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
     my $fh;
     my $ans = '';
     my $PGVERSION;
@@ -1453,6 +1503,8 @@ sub pgsql_validate_all {
 # Start the PostgreSQL instance as a *secondary*
 #
 sub pgsql_start {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
     my $rc         = pgsql_monitor();
     my %cdata      = _get_controldata();
     my $prev_state = $cdata{'state'};
@@ -1527,6 +1579,8 @@ sub pgsql_start {
 # Stop the PostgreSQL instance
 #
 sub pgsql_stop {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
     my $rc;
     my $state;
     my $pidfile = "$datadir/postmaster.pid";
@@ -1577,6 +1631,8 @@ sub pgsql_stop {
 # Monitor the PostgreSQL instance
 #
 sub pgsql_monitor {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
     my $pgisready_rc;
     my $controldata_rc;
 
@@ -1701,6 +1757,8 @@ sub pgsql_monitor {
 #   * start it
 #
 sub pgsql_demote {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
     my $rc;
 
     $rc = pgsql_monitor();
@@ -1799,6 +1857,8 @@ sub pgsql_demote {
 # Promote the secondary instance to primary
 #
 sub pgsql_promote {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
     my $rc;
     my $cancel_switchover;
 
@@ -2015,6 +2075,8 @@ sub pgsql_promote {
 # As every "notify" action, it is executed almost simultaneously on all
 # available nodes.
 sub pgsql_notify_pre_promote {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
     my $rc;
     my $node_tl;
     my $node_lsn;
@@ -2119,6 +2181,8 @@ sub pgsql_notify_pre_promote {
 
 # This action is called after a promote action.
 sub pgsql_notify_post_promote {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
 
     # We have a new master (or the previous one recovered).
     # Environment cleanup!
@@ -2132,6 +2196,8 @@ sub pgsql_notify_post_promote {
 
 # This is called before a demote occurs.
 sub pgsql_notify_pre_demote {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
     my $rc;
     my %cdata;
 
@@ -2176,6 +2242,8 @@ sub pgsql_notify_pre_demote {
 
 # This is called before a stop occurs.
 sub pgsql_notify_pre_stop {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
     my $rc;
     my %cdata;
 
@@ -2219,6 +2287,8 @@ sub pgsql_notify_pre_stop {
 # (post) other actions, like promote, start, ...
 #
 sub pgsql_notify {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
     my $type_op;
 
     ocf_log( 'debug', "pgsql_notify: environment variables: %s",
@@ -2243,6 +2313,8 @@ sub pgsql_notify {
 # Action used to allow for online modification of resource parameters value.
 #
 sub pgsql_reload {
+    my $m1debug = (caller(0))[3];
+    ocf_log($m1debug."(@_)\n");
 
     # No action necessary, the action declaration is enough to inform pacemaker
     # that the modification of any non-unique parameter can be applied without
